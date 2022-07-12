@@ -1,12 +1,12 @@
 # Study-SqlMapper
 
-인터넷 강의를 통해 SqlMapper(MyBatis, JdbcTemplate)를 통한 데이터 접근 기술 학습
-- Java, SpringBoot, MyBatis, JdbcTemplate, h2
+인터넷 강의를 통해 SqlMapper를 통한 데이터 접근 기술 학습
+- Java, SpringBoot, h2, MyBatis, JdbcTemplate, QueryDSL
 
 ##
 JDBC를 사용할 때 복잡하고 반복적인 작업을 JdbcTemplate을 통해 해결  
 JdbcTemplate은 별도의 설정 없이 사용 가능하지만, 동적 쿼리 사용에 어려움이 있다.  
-약간의 설정이 필요하지만 MyBatis를 통해 동적 쿼리를 해결할 수 있다.    
+약간의 설정이 필요하지만 MyBatis를 통해 동적 쿼리를 해결할 수 있다.
 
 따라서 프로젝트에 동적 쿼리와 복잡한 쿼리가 많다면 MyBatis, 단순한 쿼리들이 많다면 JdbcTemplate을 선택해 사용하면 될 것 같다.
 ```
@@ -47,12 +47,45 @@ return template.query(sql, param, itemRowMapper());
       </if>
     </where>
 </select>
+```
+
+- QueryDSL  
+  쿼리를 Java 코드로 type-safe하게 개발할 수 있게 지원하는 프레임워크 (컴파일 단계에서 오류 검출)  
+  이와 비슷한 Criteria API의 경우 소스가 너무 복잡하다.
+
+```
+public List<Item> findAll(ItemSearchCond cond) {
+
+String itemName = cond.getItemName();
+Integer maxPrice = cond.getMaxPrice();
+
+return query
+        .select(item)
+        .from(item)
+        .where(likeItemName(itemName), maxPrice(maxPrice))
+        .fetch();
+}
+
+private BooleanExpression maxPrice(Integer maxPrice) {
+    if (maxPrice != null) {
+        return item.price.loe(maxPrice); // 작거나 같다.
+    }
+  return null;
+}
+
+private BooleanExpression likeItemName(String itemName) {
+    if(StringUtils.hasText(itemName)) {
+      return item.itemName.like("%" + itemName + "%");
+    }
+  return null;
+}
+
 
 ```
 
 
 
-## Service 로직 작성 
+## Service 로직 작성
 ```
 -- JdbcTemplate
 public Item save(Item item) {
